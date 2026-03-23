@@ -80,9 +80,47 @@ Frontmatter 包含：title / author / finished / category / format / status / ra
 
 ---
 
+## Phase 3: Reading Summary 双层优化 + Content Vault 同步 ✅ 完成于 2026-03-23
+
+**目标**：将单一的 Reading Summary 拆为两层（私人笔记 + 社交分享帖），并自动同步 Sharing Post 到 Content Vault 供发布。
+
+### 设计决策
+
+**双层 Summary**：
+- **Reading Note**：150-200 字中文，三段式（讲了什么 → 高亮要点 → 对我的启发），信息密度高，方便快速扫描
+- **Sharing Post**：200-300 字中文社交帖，标题 → 图片 → 正文 → 原文链接，面向读者有用的角度
+
+**Sharing Post 风格**（参考 Notion Web snippets 2.0 旧帖子）：
+- 洞察/反直觉观点切入，不用"我最近读了"
+- 自然带入作者/原文背景
+- 70% 内容价值 + 30% Bear 个人实践
+- 自然收束，无 CTA 无鸡汤
+
+**图片策略**：
+- `cover_image_url` 非 Readwise 占位图 → 直接引用 URL
+- 占位图 + 有效 source_url → Playwright 截图保存到 `_assets/reader/`
+- mailto 来源 → 跳过
+
+**Content Vault 同步**：
+- 输出路径：`Bear Content Vault/Social Posts/drafts/reader/YYYY-MM-DD-{slug}.md`
+- Frontmatter 兼容 content-publisher：`publish_twitter_cn`, `publish_linkedin_en`, `ready: false`, `status: draft`, `source: reader`
+- 正常 sync 流程自动创建 draft，用户在 Obsidian 审阅后改 `ready: true` 即可发布
+
+### 实现要点
+
+- 两个独立 prompt（`READING_NOTE_PROMPT` + `SHARING_POST_PROMPT`），共享文章上下文
+- `_call_claude()` 通用调用函数，`generate_reading_note()` / `generate_sharing_post()` 各自调用
+- `write_sharing_draft()` 从 Sharing Post 提取内容写入 Content Vault draft
+- `--test N` CLI 参数预览模式（stdout，不写文件）
+- 2026 年 8 篇已全部重新生成并同步
+
+---
+
 ## 长期方向（待讨论）
 
 - 定时自动同步（launchd plist，每天早上跑一次）
 - 支持 `--since YYYY-MM-DD` 指定时间段重跑
 - 为"只有高亮，无笔记"的 795 篇单独处理（轻量归档，不调 Claude）
 - Obsidian Dataview 查询模板（按分类、日期浏览 Reader Library）
+- Sharing Post 英文版（确认中文风格后扩展）
+- 批量重新生成 2024-2025 年旧文章的双层 Summary
