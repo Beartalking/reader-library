@@ -43,9 +43,40 @@ Bear Vault/Reader Library/YYYY/MM/YYYY-MM-DD-{slug}.md
 
 ---
 
-## Phase 2: 待规划
+## Phase 2: Notion Book Library Sync ✅ 完成于 2026-03-01
 
-> Bear 提到有类似的阅读收集任务，作为 Phase 2 展开。
+**目标**：将 Notion Book Library 数据库（265 本书，2019–2026）一次性搬运到 Obsidian Bear Vault `Books/` 目录。
+
+### 数据概览
+
+- **总量**：265 本书（253 Read / 5 Reading / 4 To Read / 3 None）
+- **有中文笔记**：100 本；**有英文笔记**：34 本
+- **年份跨度**：2019–2026
+
+### 输出格式
+
+```
+Bear Vault/Books/YYYY/YYYY-{slug}.md
+Bear Vault/_assets/books/{slug}.jpg
+```
+
+Frontmatter 包含：title / author / finished / category / format / status / rating / goodreads / notion_id / cover
+
+页面内容按 heading_3 分节：Why I Read This / Summary / My Notes / Highlights / Reference/Links
+
+### 实现要点
+
+- `sync_books.py`：独立脚本，不依赖 Claude（纯搬运）
+- Notion API 直接调用（不用 notion-client SDK，用 requests 保持一致）
+- 封面图：external URL 直接 GET，Notion S3 URL 同样直接 GET，失败跳过不中断
+- `books_tracker.json` 去重 + 支持断点续跑
+- `--dry-run` / `--reset` CLI 模式与 Phase 1 一致
+
+### 设计决策
+
+- 多年份取第一个；无年份放 `Unknown/` 目录
+- 图片块输出 `[图片]` 占位符，书签块输出 URL 或 `[caption](url)`
+- `has_children` 递归一层（处理 callout / toggle 里的段落）
 
 ---
 

@@ -4,3 +4,4 @@ inspect_api.py
 count_articles.py
 __pycache__/
 *.pyc
+books_local_tracker.json
