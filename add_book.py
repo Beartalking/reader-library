@@ -98,37 +98,54 @@ def build_file_content(
     category: str,
     google_books_id: str,
     slug: str,
-    description: str = "",
+    goodreads: str = "",
+    finished: str = "",
+    book_format: str = "",
+    status: str = "Reading",
+    notes: str = "",
+    highlights: str = "",
+    summary: str = "",
 ) -> str:
-    return f"""---
+    finished_line = finished if finished else ""
+    format_line = book_format if book_format else ""
+    goodreads_line = goodreads if goodreads else ""
+
+    content = f"""---
 title: "{title}"
 author: "{author}"
-finished:
+finished: {finished_line}
 category: {category}
-format:
-status: Reading
-rating: ""
-goodreads:
+format: {format_line}
+status: {status}
+rating:
+goodreads: {goodreads_line}
 google_books_id: {google_books_id}
+notion_id:
+en_review: false
+zh_review: false
 cover: "[[{slug}.jpg]]"
 ---
 
 ![[{slug}.jpg]]
 
-## Why I Read This
+## Summary
+
+{summary if summary else ""}
+---
 
 ## My Notes
 
-<!-- 把你的摘录贴在这里 -->
+{notes if notes else ""}
 
-## My Thoughts
+---
 
-<!-- 把你的语音感悟草稿贴在这里 -->
+## Highlights
 
-## Summary
+{highlights if highlights else ""}
 
-<!-- 待 Claude 生成 —— 填完笔记后告诉我「帮我生成 summary」 -->
+---
 """
+    return content
 
 
 def safe_title_filename(title: str) -> str:
@@ -136,7 +153,18 @@ def safe_title_filename(title: str) -> str:
     return safe + ".md"
 
 
-def create_book(title: str, author: str = "", year: int = None, force: bool = False) -> tuple[Path, bool]:
+def create_book(
+    title: str,
+    author: str = "",
+    year: int = None,
+    force: bool = False,
+    finished: str = "",
+    book_format: str = "",
+    status: str = "Reading",
+    notes: str = "",
+    highlights: str = "",
+    summary: str = "",
+) -> tuple[Path, bool]:
     if year is None:
         year = datetime.now().year
 
@@ -195,6 +223,12 @@ def create_book(title: str, author: str = "", year: int = None, force: bool = Fa
         category=category,
         google_books_id=google_books_id,
         slug=slug,
+        finished=finished,
+        book_format=book_format,
+        status=status,
+        notes=notes,
+        highlights=highlights,
+        summary=summary,
     )
 
     md_path.write_text(content, encoding="utf-8")
@@ -219,10 +253,8 @@ def main():
     if created:
         print(f"\nCreated: {path}")
         print("\nNext steps:")
-        print("  1. Open the file in Obsidian and fill in 'Why I Read This'")
-        print("  2. Paste your highlights into 'My Notes'")
-        print("  3. Drop your voice memo draft into 'My Thoughts'")
-        print("  4. Tell Claude: 「帮我生成 summary」")
+        print("  1. Fill in rating (manually)")
+        print("  2. Run: python3 sync_books_to_readwise.py --book \"TITLE\" (sync highlights to Readwise)")
 
 
 if __name__ == "__main__":
