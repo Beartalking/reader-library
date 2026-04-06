@@ -28,6 +28,11 @@ BOOKS_DIR = VAULT_ROOT / "Books"
 ASSETS_DIR = VAULT_ROOT / "_assets" / "books"
 
 GOOGLE_BOOKS_API = "https://www.googleapis.com/books/v1/volumes"
+DOUBAN_SUGGEST_API = "https://book.douban.com/j/subject_suggest"
+DOUBAN_UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
 
 CATEGORY_MAP = [
     (r"^Business|^Economics", "Business"),
@@ -79,10 +84,57 @@ def pick_best_match(items: list[dict], title: str) -> dict | None:
     return items[0]
 
 
-def download_cover(url: str, dest: Path) -> bool:
+def search_douban(title: str, retries: int = 3) -> dict | None:
+    """Fallback: search Douban Books suggest API. Returns dict with
+    title, author, cover_url, url on success, else None. Retries on
+    timeout because Douban's suggest endpoint is flaky."""
+    items = None
+    last_err = None
+    for attempt in range(1, retries + 1):
+        try:
+            resp = requests.get(
+                DOUBAN_SUGGEST_API,
+                params={"q": title},
+                headers={"User-Agent": DOUBAN_UA, "Referer": "https://book.douban.com/"},
+                timeout=30,
+            )
+            resp.raise_for_status()
+            items = resp.json()
+            break
+        except Exception as e:
+            last_err = e
+            print(f"  [warn] Douban attempt {attempt}/{retries} failed: {e}")
+    if items is None:
+        print(f"  [warn] Douban gave up after {retries} attempts: {last_err}")
+        return None
+    if not items:
+        return None
+    title_lower = title.lower()
+    best = None
+    for item in items:
+        if title_lower in item.get("title", "").lower():
+            best = item
+            break
+    best = best or items[0]
+    cover = best.get("pic", "")
+    # Upgrade small cover to large: /subject/s/ -> /subject/l/
+    if cover:
+        cover = cover.replace("/subject/s/", "/subject/l/")
+    return {
+        "title": best.get("title", title),
+        "author": best.get("author_name", ""),
+        "cover_url": cover,
+        "url": best.get("url", ""),
+    }
+
+
+def download_cover(url: str, dest: Path, referer: str = "") -> bool:
     try:
         url = url.replace("zoom=1", "zoom=2").replace("http://", "https://")
-        resp = requests.get(url, timeout=10)
+        headers = {"User-Agent": DOUBAN_UA}
+        if referer:
+            headers["Referer"] = referer
+        resp = requests.get(url, headers=headers, timeout=10)
         resp.raise_for_status()
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_bytes(resp.content)
@@ -188,6 +240,7 @@ def create_book(
     category = ""
     google_books_id = ""
     cover_url = ""
+    cover_referer = ""
 
     if best:
         info = best.get("volumeInfo", {})
@@ -202,18 +255,23 @@ def create_book(
         cover_url = image_links.get("thumbnail", image_links.get("smallThumbnail", ""))
         print(f"  Found: {book_title!r} by {book_author!r} [{category}]")
     else:
-        print(f"  [warn] No results found for {title!r}. Creating file with empty frontmatter.")
-        if items:
-            print("  Candidates returned:")
-            for item in items:
-                info = item.get("volumeInfo", {})
-                print(f"    - {info.get('title')} by {info.get('authors', [])}")
+        print(f"  [warn] Google Books returned nothing. Trying Douban...")
+        douban = search_douban(title)
+        if douban and douban.get("cover_url"):
+            book_title = douban["title"]
+            if not book_author and douban.get("author"):
+                book_author = douban["author"]
+            cover_url = douban["cover_url"]
+            cover_referer = "https://book.douban.com/"
+            print(f"  Found on Douban: {book_title!r} by {book_author!r}")
+        else:
+            print(f"  [warn] No results found for {title!r}. Creating file with empty frontmatter.")
 
     cover_saved = False
     if cover_url:
         ASSETS_DIR.mkdir(parents=True, exist_ok=True)
         cover_path = ASSETS_DIR / f"{slug}.jpg"
-        cover_saved = download_cover(cover_url, cover_path)
+        cover_saved = download_cover(cover_url, cover_path, referer=cover_referer)
         if cover_saved:
             print(f"  Cover saved: {cover_path}")
 

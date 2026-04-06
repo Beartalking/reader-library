@@ -1,5 +1,14 @@
 # Reader Library — Plan
 
+## 上次完成（2026-04-06）
+
+- `add_book.py` 增加豆瓣封面 fallback：Google Books 失败后改查 `book.douban.com/j/subject_suggest`
+- 封面 URL 从 `/subject/s/` 升级到 `/subject/l/` 大图
+- `download_cover()` 支持 Referer header（豆瓣图床防盗链必需）
+- 豆瓣 suggest API 响应不稳（有时 60s 超时），所以加了 3 次 retry，timeout 30s
+- 实测 `add_book.py "星震"` 时 Google 返回 429 限流，豆瓣 fallback 正常拉到封面
+- Caveat: 豆瓣不返回 category，豆瓣命中时 `category` 留空需手动填
+
 ## 上次完成（2026-03-23）
 
 - Reading Summary 拆为双层：Reading Note（私人笔记）+ Sharing Post（社交分享帖）
