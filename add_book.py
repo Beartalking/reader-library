@@ -24,7 +24,7 @@ from slugify import slugify
 VAULT_ROOT = Path(
     "/Users/bearliu/Library/Mobile Documents/iCloud~md~obsidian/Documents/Bear Vault"
 )
-BOOKS_DIR = VAULT_ROOT / "Books"
+BOOKS_DIR = VAULT_ROOT / "40_Books"
 ASSETS_DIR = VAULT_ROOT / "_assets" / "books"
 
 GOOGLE_BOOKS_API = "https://www.googleapis.com/books/v1/volumes"

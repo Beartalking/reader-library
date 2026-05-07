@@ -42,7 +42,7 @@ NOTION_BOOK_DB_ID = os.environ.get("NOTION_BOOK_DB_ID", "")
 VAULT_ROOT = Path(
     "/Users/bearliu/Library/Mobile Documents/iCloud~md~obsidian/Documents/Bear Vault"
 )
-BOOKS_DIR = VAULT_ROOT / "Books"
+BOOKS_DIR = VAULT_ROOT / "40_Books"
 ASSETS_DIR = VAULT_ROOT / "_assets" / "books"
 TRACKER_PATH = Path(__file__).parent / "books_tracker.json"
 

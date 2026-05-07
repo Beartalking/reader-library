@@ -42,7 +42,7 @@ READWISE_TOKEN = os.environ.get("READWISE_TOKEN", "")
 VAULT_ROOT = Path(
     "/Users/bearliu/Library/Mobile Documents/iCloud~md~obsidian/Documents/Bear Vault"
 )
-BOOKS_DIR = VAULT_ROOT / "Books"
+BOOKS_DIR = VAULT_ROOT / "40_Books"
 TRACKER_PATH = Path(__file__).parent / "readwise_upload_tracker.json"
 
 READWISE_HIGHLIGHTS_URL = "https://readwise.io/api/v2/highlights/"
