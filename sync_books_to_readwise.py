@@ -405,9 +405,48 @@ def _parse_paragraph_format(section):
     return highlights
 
 
+_PDF_BLOCK_ID_RE = re.compile(r'\s*\^[0-9a-f]{16}\s*$')
+
+
+def _is_pdf_format(section):
+    # type: (str) -> bool
+    """PDF 提取格式：blockquote 行末尾带 16 位十六进制 block id。
+
+    由 book-canvas 项目的 build_book_folder.py 写入，形如：
+        > 高亮原文 ^a3f2b1c8d4e5f607
+    """
+    for line in section.split("\n"):
+        stripped = line.strip()
+        if stripped.startswith("> ") and _PDF_BLOCK_ID_RE.search(stripped):
+            return True
+    return False
+
+
+def _parse_pdf_format(section):
+    # type: (str) -> List[dict]
+    """解析 PDF 提取格式，剥掉 '> ' 前缀和 '^blockid' 后缀。
+
+    block id 是 Obsidian 的块引用锚点（Bear 用 [[书名#^id]] 引用单条高亮），
+    对 Readwise 无意义，必须剥掉，否则会连着符号一起传上去。
+    """
+    highlights = []  # type: List[dict]
+    for line in section.split("\n"):
+        stripped = line.strip()
+        if not stripped.startswith("> "):
+            continue
+        text = _PDF_BLOCK_ID_RE.sub("", stripped[2:]).strip()
+        if len(text) < 5:
+            continue
+        highlights.append({"text": text, "note": ""})
+    return highlights
+
+
 def _detect_format(section):
     # type: (str) -> str
-    """Detect the highlight format: 'bullet' or 'paragraph'."""
+    """Detect the highlight format: 'pdf', 'bullet' or 'paragraph'."""
+    if _is_pdf_format(section):
+        return "pdf"
+
     lines = section.split("\n")
     bullet_count = 0
     total_lines = 0
@@ -442,7 +481,9 @@ def parse_book_md(path):
 
     # Detect format and parse
     fmt = _detect_format(section)
-    if fmt == "bullet":
+    if fmt == "pdf":
+        highlights = _parse_pdf_format(section)
+    elif fmt == "bullet":
         highlights = _parse_wechat_format(section)
     else:
         highlights = _parse_paragraph_format(section)
@@ -486,6 +527,14 @@ def scan_books():
             continue
         for md_file in sorted(year_dir.glob("*.md")):
             paths.append(md_file)
+        # Folder-form books (book-canvas 项目升级出来的): 40_Books/{year}/{书名}/{书名}.md
+        # 主笔记与其文件夹同名，据此定位、并排除 Research/ 里的其它 .md
+        for sub in sorted(year_dir.iterdir()):
+            if not sub.is_dir() or sub.name in ("Assets", "99_Assets"):
+                continue
+            main_note = sub / (sub.name + ".md")
+            if main_note.exists():
+                paths.append(main_note)
     # Also check Unknown folder
     unknown_dir = BOOKS_DIR / "Unknown"
     if unknown_dir.is_dir():
