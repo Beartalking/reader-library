@@ -25,7 +25,7 @@ VAULT_ROOT = Path(
     "/Users/bearliu/Library/Mobile Documents/iCloud~md~obsidian/Documents/Bear Vault"
 )
 BOOKS_DIR = VAULT_ROOT / "40_Books"
-ASSETS_DIR = VAULT_ROOT / "_assets" / "books"
+ASSETS_DIR = VAULT_ROOT / "99_Assets" / "books"
 
 GOOGLE_BOOKS_API = "https://www.googleapis.com/books/v1/volumes"
 DOUBAN_SUGGEST_API = "https://book.douban.com/j/subject_suggest"
