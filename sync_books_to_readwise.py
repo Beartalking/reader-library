@@ -428,16 +428,39 @@ def _parse_pdf_format(section):
 
     block id 是 Obsidian 的块引用锚点（Bear 用 [[书名#^id]] 引用单条高亮），
     对 Readwise 无意义，必须剥掉，否则会连着符号一起传上去。
+
+    双语书（左英右中对开的 PDF）一条高亮占两行，中文在上、英文斜体在下，
+    锚点在第二行：
+
+        > 如果人们难以阅读字体，他们会将这种困难感转移到文本本身的含义。
+        > *If people have trouble reading a font, they transfer...* ^a3f2b1c8d4e5f607
+
+    所以不能逐行当成一条，否则中英会变成两条分别传上去。**按锚点断句**：
+    攒 '> ' 行直到遇上带锚点的那行，这一组算一条，两行的取第一行（中文，
+    Bear 要的是中文进 Readwise）。单语老书每行自带锚点，每行自成一组、
+    取自己，行为一字不变——这是选锚点而不是选空行做分隔符的原因，空行规则
+    会把老书连续的 49 行并成一条。
     """
     highlights = []  # type: List[dict]
+    group = []  # type: List[str]
     for line in section.split("\n"):
         stripped = line.strip()
         if not stripped.startswith("> "):
             continue
-        text = _PDF_BLOCK_ID_RE.sub("", stripped[2:]).strip()
+        has_id = bool(_PDF_BLOCK_ID_RE.search(stripped))
+        group.append(_PDF_BLOCK_ID_RE.sub("", stripped[2:]).strip())
+        if not has_id:
+            continue
+        text = group[0].strip()
+        group = []
         if len(text) < 5:
             continue
         highlights.append({"text": text, "note": ""})
+
+    # 收尾没遇上锚点的残组：手工编辑时把锚点删掉了就会走到这里。宁可当成
+    # 一条传上去，也不要静默丢掉 Bear 划的线。
+    if group and len(group[0].strip()) >= 5:
+        highlights.append({"text": group[0].strip(), "note": ""})
     return highlights
 
 
