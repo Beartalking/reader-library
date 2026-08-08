@@ -3,7 +3,7 @@
 Notion Book Library -> Obsidian sync script.
 
 Pulls all 265 books from the Notion Book Library database and writes
-Markdown files to Bear Vault/Books/YYYY/YYYY-{slug}.md.
+Markdown files to Bear Vault/40_Books/YYYY/YYYY-{slug}.md.
 Cover images are downloaded to Bear Vault/_assets/books/{slug}.jpg.
 
 Usage:

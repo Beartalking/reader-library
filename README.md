@@ -49,7 +49,7 @@ ANTHROPIC_API_KEY=your_key_here     # console.anthropic.com
 
 文件写入路径：
 ```
-Bear Vault/Reader Library/YYYY/MM/YYYY-MM-DD-{slug}.md
+Bear Vault/42_Reader_Library/YYYY/MM/YYYY-MM-DD-{slug}.md
 ```
 
 每篇文章包含：

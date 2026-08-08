@@ -40,7 +40,7 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 VAULT_ROOT = Path(
     "/Users/bearliu/Library/Mobile Documents/iCloud~md~obsidian/Documents/Bear Vault"
 )
-LIBRARY_DIR = VAULT_ROOT / "Reader Library"
+LIBRARY_DIR = VAULT_ROOT / "42_Reader_Library"
 TRACKER_PATH = Path(__file__).parent / "sync_tracker.json"
 
 CONTENT_VAULT = Path(
@@ -399,7 +399,7 @@ def _build_dest_path(book: dict) -> tuple[str, Path]:
     raw_slug = slugify(title, max_length=60, word_boundary=True)
     filename = f"{date_str}-{raw_slug}.md"
 
-    rel = f"Reader Library/{year}/{month}/{filename}"
+    rel = f"42_Reader_Library/{year}/{month}/{filename}"
     abs_path = LIBRARY_DIR / year / month / filename
     return rel, abs_path
 

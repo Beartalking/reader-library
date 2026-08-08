@@ -20,7 +20,7 @@
 
 **输出路径**：
 ```
-Bear Vault/Reader Library/YYYY/MM/YYYY-MM-DD-{slug}.md
+Bear Vault/42_Reader_Library/YYYY/MM/YYYY-MM-DD-{slug}.md
 ```
 
 **Claude 模型**：`claude-haiku-4-5-20251001`（快速、低成本，生成 ~200 字摘要）
@@ -56,7 +56,7 @@ Bear Vault/Reader Library/YYYY/MM/YYYY-MM-DD-{slug}.md
 ### 输出格式
 
 ```
-Bear Vault/Books/YYYY/YYYY-{slug}.md
+Bear Vault/40_Books/YYYY/YYYY-{slug}.md
 Bear Vault/_assets/books/{slug}.jpg
 ```
 

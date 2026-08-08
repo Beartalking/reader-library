@@ -1,5 +1,15 @@
 # Reader Library — Plan
 
+## 上次完成（2026-08-08）
+
+- 文档路径对齐代码实况：`README.md` / `docs/roadmap.md` / `sync_books.py` docstring 里的
+  `Bear Vault/Reader Library/` → `42_Reader_Library/`、`Bear Vault/Books/` → `40_Books/`
+  （代码在 c5b0625「迁移 Books → 40_Books」时已改，文档漏了）
+- 未提交的 `sync_reader.py` 路径迁移（`Reader Library` → `42_Reader_Library`）一并入仓
+- 实测 `add_book.py "Everyday Matters" --author "Danny Gregory"`：Google Books 429 限流 →
+  豆瓣 fallback 命中**同名的另一本书**，抓回错误封面（一张洗手池照片）。
+  最后手工换成 Open Library 按 ISBN 取的正确封面
+
 ## 上次完成（2026-04-06）
 
 - `add_book.py` 增加豆瓣封面 fallback：Google Books 失败后改查 `book.douban.com/j/subject_suggest`
@@ -20,6 +30,8 @@
 
 ## 下次待办
 
+- [ ] `add_book.py` 加 Open Library 按 ISBN 取封面的 fallback（比豆瓣同名匹配可靠），
+      并在豆瓣命中时把书名/作者打印出来提示人工核对
 - [ ] 考虑批量重新生成 2024-2025 年旧文章（约 80 篇，需确认是否值得 API 开销）
 - [ ] Sharing Post 英文版支持
 - [ ] 定时自动同步（launchd plist）
@@ -27,5 +39,7 @@
 
 ## 遗留问题
 
+- 豆瓣 suggest 只按书名模糊匹配，`--author` 不参与筛选，英文书容易命中同名的另一本书。
+  豆瓣 fallback 拿回的封面每次都要人眼核一下
 - 2 篇旧文件（`2026-03-01` 和中文文件名的 `2026-03-03`）是早期格式，没有 Sharing Post section，未同步到 Content Vault
 - mailto 来源的文章无法截图也无法提供有效的原文链接
