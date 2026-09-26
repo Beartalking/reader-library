@@ -56,7 +56,9 @@ Bear Vault/42_Reader_Library/YYYY/MM/YYYY-MM-DD-{slug}.md
 - **Frontmatter**：标题、作者、日期、来源链接、分类、Readwise ID
 - **Highlights**：划线原文（blockquote 格式），含行内批注
 - **My Notes**：Readwise Notebook 面板里写的个人感悟
-- **Reading Summary**：Claude Haiku 生成的 ~200 字第一人称阅读体会
+- **Reading Note**：Claude Haiku 生成的 150–200 字私人阅读笔记
+
+2026-09-26 起不再生成社交分享帖草稿，见 `docs/roadmap.md` Phase 4。
 
 ---
 

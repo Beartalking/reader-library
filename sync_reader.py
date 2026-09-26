@@ -21,7 +21,6 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 import requests
 from anthropic import Anthropic
@@ -43,17 +42,12 @@ VAULT_ROOT = Path(
 LIBRARY_DIR = VAULT_ROOT / "42_Reader_Library"
 TRACKER_PATH = Path(__file__).parent / "sync_tracker.json"
 
-CONTENT_VAULT = Path(
-    "/Users/bearliu/Library/Mobile Documents/iCloud~md~obsidian/Documents/Bear Content Vault"
-)
-READER_DRAFTS_DIR = CONTENT_VAULT / "Social Posts" / "drafts" / "reader"
-
 READWISE_EXPORT_URL = "https://readwise.io/api/v2/export/"
 VALID_CATEGORIES = {"articles", "tweets", "videos", "podcasts"}
 
 CLAUDE_MODEL = "claude-haiku-4-5-20251001"
 
-# Shared article context block (reused by both prompts)
+# Article context block for the Reading Note prompt
 _ARTICLE_CONTEXT = """\
 ## 文章信息
 
@@ -87,38 +81,6 @@ READING_NOTE_PROMPT = """\
 
 信息密度高，口语化，方便快速扫描。像给自己写的备忘录。
 禁止破折号、"不是……而是"句型、鸡汤、营销词、列表格式。"""
-
-SHARING_POST_PROMPT = """\
-你正在帮 Bear Liu 把一篇阅读笔记改写成社交媒体分享帖（LinkedIn / Twitter），面向设计师、创作者和独立开发者。
-
-{article_context}
-
-## 输出要求
-
-第一行输出一个简短的中文标题（10-20 字，概括核心洞察，不要用原文标题直译）。
-标题后空一行，接 200-300 字中文短文。
-
-## 风格参考（从 Bear 过往帖子总结）
-
-**开头**：用一个吸引人的洞察、反直觉的观点、或一个具体场景切入。绝对不要用"我最近读了……"。
-
-**上下文**：在开头之后自然地带入 1-2 句关于作者或原文的背景介绍（谁写的、什么场景下的内容、为什么值得关注），让读者知道信息来源。不要生硬地"介绍作者"，融入行文中。
-
-**主体**：70% 讲这篇内容的关键洞察和实用价值（对读者有什么用），30% Bear 自己的实践经验或反思。读者读完要觉得"学到了"。
-
-**收尾**：自然收束，可以是一句点睛的观点，或者 Bear 接下来打算怎么用。不要 CTA，不要鸡汤。
-
-**语气**：像一个有经验的朋友在分享他发现的好东西。真诚、具体、有观点。不炫技，不说教。长短句交替，口语化。
-
-**绝对禁止**：
-- 破折号（Em Dashes）
-- "不是……而是"句型
-- 鸡汤句："相信自己""勇敢追梦"
-- 营销词："颠覆""赋能""打造""闭环"
-- "总结一下" + 要点回顾
-- 列表、表格
-- emoji"""
-
 
 # ---------------------------------------------------------------------------
 # Tracker
@@ -258,68 +220,7 @@ def generate_reading_note(book: dict, highlights_text: str, doc_note: str, dry_r
     return _call_claude(prompt, max_tokens=400)
 
 
-def generate_sharing_post(book: dict, highlights_text: str, doc_note: str, dry_run: bool) -> str:
-    if dry_run:
-        return "[dry-run — Sharing Post 未生成]"
-    ctx = _build_article_context(book, highlights_text, doc_note)
-    prompt = SHARING_POST_PROMPT.format(article_context=ctx)
-    return _call_claude(prompt, max_tokens=800)
-
-
-_READWISE_DEFAULT_PREFIX = "readwise-assets.s3.amazonaws.com/static/images/"
-ASSETS_DIR = VAULT_ROOT / "_assets" / "reader"
-
-
-def _has_real_cover(book: dict) -> bool:
-    """Return True if cover_image_url is a real image, not a Readwise placeholder."""
-    url = (book.get("cover_image_url") or "").strip()
-    if not url:
-        return False
-    return _READWISE_DEFAULT_PREFIX not in url
-
-
-def _capture_screenshot(source_url: str, slug: str) -> Optional[str]:
-    """Take a screenshot of source_url, save to assets, return vault-relative path."""
-    if not source_url or source_url.startswith("mailto:"):
-        return None
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        print("    WARNING: playwright not installed, skipping screenshot")
-        return None
-
-    ASSETS_DIR.mkdir(parents=True, exist_ok=True)
-    filename = f"{slug}.png"
-    abs_path = ASSETS_DIR / filename
-
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page(viewport={"width": 1280, "height": 800})
-            page.goto(source_url, wait_until="domcontentloaded", timeout=15000)
-            page.wait_for_timeout(2000)
-            page.screenshot(path=str(abs_path))
-            browser.close()
-        return f"_assets/reader/{filename}"
-    except Exception as exc:
-        print(f"    WARNING: Screenshot failed: {exc}")
-        return None
-
-
-def _get_sharing_image(book: dict, slug: str) -> Optional[str]:
-    """Return markdown image string for sharing post, or None."""
-    if _has_real_cover(book):
-        url = book["cover_image_url"]
-        return f"![{book.get('title', '')}]({url})"
-
-    source_url = book.get("source_url") or ""
-    rel_path = _capture_screenshot(source_url, slug)
-    if rel_path:
-        return f"![[{rel_path}]]"
-    return None
-
-
-def build_note_content(book: dict, reading_note: str, sharing_post: str, sharing_image: Optional[str] = None) -> str:
+def build_note_content(book: dict, reading_note: str) -> str:
     title = book.get("title") or "（无标题）"
     author = book.get("author") or ""
     source_url = book.get("source_url") or book.get("readwise_url") or ""
@@ -351,19 +252,6 @@ readwise_id: {book_id}
         sections += ["## My Notes", "", doc_note, ""]
 
     sections += ["## Reading Note", "", reading_note, ""]
-
-    # Sharing Post: title (first line of sharing_post) + image + body + link
-    sections += ["## Sharing Post", ""]
-    post_lines = sharing_post.strip().split("\n", 1)
-    post_title = post_lines[0].strip()
-    post_body = post_lines[1].strip() if len(post_lines) > 1 else ""
-    sections += [post_title, ""]
-    if sharing_image:
-        sections += [sharing_image, ""]
-    if post_body:
-        sections += [post_body, ""]
-    if source_url:
-        sections += [f"原文链接：{source_url}", ""]
 
     return "\n".join(sections)
 
@@ -412,48 +300,6 @@ def write_to_vault(abs_path: Path, content: str) -> None:
     abs_path.parent.mkdir(parents=True, exist_ok=True)
     with open(abs_path, "w", encoding="utf-8") as f:
         f.write(content)
-
-
-def write_sharing_draft(book: dict, sharing_post: str, sharing_image: Optional[str] = None) -> Optional[str]:
-    """Extract Sharing Post and write as a Content Vault draft. Returns relative path or None."""
-    source_url = book.get("source_url") or book.get("readwise_url") or ""
-    date_str = _latest_highlight_date(book.get("highlights") or [])
-    title_raw = book.get("title") or "(untitled)"
-    raw_slug = slugify(title_raw, max_length=60, word_boundary=True)
-    filename = f"{date_str}-{raw_slug}.md"
-    abs_path = READER_DRAFTS_DIR / filename
-
-    # Parse title (first line) and body from sharing_post
-    post_lines = sharing_post.strip().split("\n", 1)
-    post_title = post_lines[0].strip().lstrip("# ").strip()
-    post_body = post_lines[1].strip() if len(post_lines) > 1 else ""
-
-    # Build frontmatter compatible with content-publisher
-    fm_title = post_title.replace('"', "'")
-    frontmatter = f"""---
-title: "{fm_title}"
-date: {date_str}
-publish_twitter_cn: true
-publish_linkedin_en: true
-ready: false
-status: draft
-source: reader
-source_url: "{source_url}"
----"""
-
-    # Assemble: title → image → body → link
-    sections = [frontmatter, "", post_title, ""]
-    if sharing_image:
-        sections += [sharing_image, ""]
-    if post_body:
-        sections += [post_body, ""]
-    if source_url:
-        sections += [f"原文链接：{source_url}", ""]
-
-    content = "\n".join(sections)
-    write_to_vault(abs_path, content)
-    rel = f"Social Posts/drafts/reader/{filename}"
-    return rel
 
 
 # ---------------------------------------------------------------------------
@@ -507,15 +353,6 @@ def main() -> None:
             print("\n--- Reading Note ---\n")
             note = generate_reading_note(book, highlights_text, doc_note, dry_run=False)
             print(note)
-            print("\n--- Sharing Post ---\n")
-            cover = book.get("cover_image_url", "")
-            has_cover = _has_real_cover(book)
-            print(f"[Image: {'cover' if has_cover else 'would screenshot'} — {cover[:80]}]")
-            post = generate_sharing_post(book, highlights_text, doc_note, dry_run=False)
-            print(post)
-            source = book.get("source_url") or book.get("readwise_url") or ""
-            if source:
-                print(f"\n原文链接：{source}")
             print()
         print(f"\nTest done. Generated for {len(articles)} articles.")
         return
@@ -547,12 +384,7 @@ def main() -> None:
         doc_note = (book.get("document_note") or "").strip()
         highlights_text = build_highlights_text(book.get("highlights", []))
         reading_note = generate_reading_note(book, highlights_text, doc_note, dry_run=False)
-        sharing_post = generate_sharing_post(book, highlights_text, doc_note, dry_run=False)
-
-        raw_slug = slugify(title, max_length=60, word_boundary=True)
-        sharing_image = _get_sharing_image(book, raw_slug)
-
-        content = build_note_content(book, reading_note, sharing_post, sharing_image)
+        content = build_note_content(book, reading_note)
 
         try:
             write_to_vault(abs_path, content)
@@ -560,14 +392,6 @@ def main() -> None:
             print(f"  ERROR writing {abs_path}: {exc}")
             error_count += 1
             continue
-
-        # Also write sharing draft to Content Vault
-        try:
-            draft_rel = write_sharing_draft(book, sharing_post, sharing_image)
-            if draft_rel:
-                print(f"  -> draft: {draft_rel}")
-        except Exception as exc:
-            print(f"  WARNING: draft write failed: {exc}")
 
         mark_synced(tracker, book_id, rel_path)
         save_tracker(tracker)

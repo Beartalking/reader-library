@@ -116,11 +116,40 @@ Frontmatter 包含：title / author / finished / category / format / status / ra
 
 ---
 
+## Phase 4: 从「出帖子」改为「攒素材」 🚧 2026-09-26 起
+
+**起因**（Bear，2026-09-26）：Reader 同步出来的 Sharing Post 本质是转述别人的内容，
+太机械，不像他写的。有价值的原创是「一个普遍适用的 insight + 他自己的具体案例」，
+这需要攒几篇、由他来接上自己的经历，不能一篇一篇自动出成稿。
+
+### 4a. 停掉 Sharing Post ✅ 2026-09-26
+
+- `sync_reader.py` 不再生成 Sharing Post，不再写 Content Vault `drafts/reader/`，不再截图
+- 42_Reader_Library 里的笔记只剩：Highlights / My Notes / Reading Note
+- Phase 3 的 `SHARING_POST_PROMPT` / `write_sharing_draft()` / Playwright 截图已删，要找回看 git 历史（855266e）
+- 2026-09-26 同步出的 8 份 `drafts/reader/` 草稿删了 7 份；Motion Design 那份已是 `ready: true`，留着等 Bear 定
+
+### 4b. 每周阅读素材 summary（接进周复盘） ⬜ 下次开工
+
+**设想**：Bear 做周复盘时，把这周读过的文章快速 summary 给他看，作为下一次写作的素材。
+
+待定（开工前先跟 Bear 确认，别自己拍板）：
+- **挂在哪**：`/goals` 周复盘里加一段，还是独立一个 `sync_reader.py --weekly` 由周复盘调用
+- **「这周」怎么算**：按高亮日期（`_latest_highlight_date`）还是按同步日期
+- **素材卡长什么样**：倾向是每条提炼一个通用 insight + 留一个「我的案例：____」空位给 Bear 填，
+  不写成稿。Bear 还在想，格式等他定
+- **合写**：同主题几篇归到一起（例：2026-09-25 的四篇 LinkedIn 获客 → 一条 insight + FDP 的真实经历）。
+  是 summary 里就按主题分组，还是只列出来让 Bear 自己挑
+- **落在哪**：周复盘里直接展示即可，还是另存一份素材清单进 Obsidian（和 content-planner
+  `32_Content_Ideas/` 选题池是什么关系，别跟它抢活）
+- 只收有 `document_note` 的文章，还是纯高亮的也算进来
+
+---
+
 ## 长期方向（待讨论）
 
 - 定时自动同步（launchd plist，每天早上跑一次）
 - 支持 `--since YYYY-MM-DD` 指定时间段重跑
 - 为"只有高亮，无笔记"的 795 篇单独处理（轻量归档，不调 Claude）
 - Obsidian Dataview 查询模板（按分类、日期浏览 Reader Library）
-- Sharing Post 英文版（确认中文风格后扩展）
-- 批量重新生成 2024-2025 年旧文章的双层 Summary
+- 批量重新生成 2024-2025 年旧文章的 Reading Note
