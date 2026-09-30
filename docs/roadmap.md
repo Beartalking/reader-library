@@ -136,8 +136,12 @@ Frontmatter 包含：title / author / finished / category / format / status / ra
 待定（开工前先跟 Bear 确认，别自己拍板）：
 - **挂在哪**：`/goals` 周复盘里加一段，还是独立一个 `sync_reader.py --weekly` 由周复盘调用
 - **「这周」怎么算**：按高亮日期（`_latest_highlight_date`）还是按同步日期
-- **素材卡长什么样**：倾向是每条提炼一个通用 insight + 留一个「我的案例：____」空位给 Bear 填，
-  不写成稿。Bear 还在想，格式等他定
+- ~~**素材卡长什么样**~~ **✅ Bear 2026-10-01 定了**：一篇文章一张素材卡，不写成稿，拆三块：
+  ① **commodity content**（文章里的通用观点，AI 能整理的那部分）
+  ② **examples**（文章里的具体例子）
+  ③ **personalized content**：空位，留给 Bear 自己往里加个性化内容。
+  一张卡就是一个他能查看的素材。原话：「读后总结帖依然保留，但是把帖子里的内容拆开」。
+  出处是 09-26 的判断（「将 Commodity 的内容提炼出来，然后将真正属于我自己的部分加进去」）
 - **合写**：同主题几篇归到一起（例：2026-09-25 的四篇 LinkedIn 获客 → 一条 insight + FDP 的真实经历）。
   是 summary 里就按主题分组，还是只列出来让 Bear 自己挑
 - **落在哪**：周复盘里直接展示即可，还是另存一份素材清单进 Obsidian（和 content-planner
