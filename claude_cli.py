@@ -27,6 +27,10 @@ from pathlib import Path
 from typing import Optional
 
 DEFAULT_MODEL = "sonnet"
+# Always sent: without --system-prompt, claude -p runs under Claude Code's own
+# coding-agent prompt. Callers that keep their instructions in the user message
+# get this instead (2026-10-08).
+NEUTRAL_SYSTEM_PROMPT = "Follow the instructions in the user's message."
 TIMEOUT_SECONDS = 300
 # Absolute fallback: launchd's PATH has no ~/.local/bin.
 _FALLBACK_BIN = Path.home() / ".local" / "bin" / "claude"
@@ -52,10 +56,10 @@ def _binary() -> str:
 def complete(system: Optional[str], user: str, model: str = DEFAULT_MODEL,
              timeout: int = TIMEOUT_SECONDS) -> str:
     """Return the model's text, or raise ClaudeCLIError."""
-    cmd = [_binary(), "-p", "--output-format", "json"]
-    if system:
-        cmd += ["--system-prompt", system]
-    cmd += [
+    cmd = [
+        _binary(), "-p",
+        "--output-format", "json",
+        "--system-prompt", system or NEUTRAL_SYSTEM_PROMPT,
         "--tools", "",
         "--strict-mcp-config",
         "--setting-sources", "",
