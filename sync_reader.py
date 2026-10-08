@@ -9,7 +9,9 @@ Usage:
 
 Env vars required:
     READWISE_TOKEN    - from readwise.io/access_token
-    ANTHROPIC_API_KEY - Claude API key
+
+Reading Notes are generated through headless `claude -p` (Bear's subscription,
+see claude_cli.py), so ANTHROPIC_API_KEY is no longer needed.
 """
 
 from __future__ import annotations
@@ -23,9 +25,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
-from anthropic import Anthropic
 from dotenv import load_dotenv
 from slugify import slugify
+
+import claude_cli
 
 load_dotenv()
 
@@ -34,7 +37,6 @@ load_dotenv()
 # ---------------------------------------------------------------------------
 
 READWISE_TOKEN = os.environ.get("READWISE_TOKEN", "")
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
 VAULT_ROOT = Path(
     "/Users/bearliu/Library/Mobile Documents/iCloud~md~obsidian/Documents/Bear Vault"
@@ -197,19 +199,12 @@ def _build_article_context(book: dict, highlights_text: str, doc_note: str) -> s
 
 
 def _call_claude(prompt: str, max_tokens: int) -> str:
-    if not ANTHROPIC_API_KEY:
-        return "[生成失败：ANTHROPIC_API_KEY 未设置，请手动补充]"
-    client = Anthropic(api_key=ANTHROPIC_API_KEY)
-    try:
-        message = client.messages.create(
-            model=CLAUDE_MODEL,
-            max_tokens=max_tokens,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return message.content[0].text.strip()
-    except Exception as exc:
-        print(f"\n  WARNING: Claude API error: {exc}")
+    # max_tokens is kept for callers; claude -p has no output cap flag.
+    text = claude_cli.call(None, prompt, model=CLAUDE_MODEL, timeout=300)
+    if not text:
+        print("\n  WARNING: Claude call failed")
         return "[生成失败，请手动补充]"
+    return text.strip()
 
 
 def generate_reading_note(book: dict, highlights_text: str, doc_note: str, dry_run: bool) -> str:

@@ -30,7 +30,6 @@ python3 sync_reader.py
 
 ```
 READWISE_TOKEN=your_token_here      # readwise.io/access_token
-ANTHROPIC_API_KEY=your_key_here     # console.anthropic.com
 ```
 
 ---
