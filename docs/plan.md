@@ -1,5 +1,14 @@
 # Reader Library — Plan
 
+## 上次完成（2026-10-12）
+
+- **新增 `sync_goodreads.py`（book-note Pipeline F）**：Bear 定分数统一在 Goodreads 打，rating / finished / started / 新条目封面以 Goodreads 为准，笔记摘记仍在 Obsidian
+  - 数据源：书架公开 RSS（`read` + `currently-reading`），书评页和书架网页要登录，抓不到「开始读」日期，改用放进 Currently Reading 的日期
+  - 首跑：20 本分数、77 本历史读完日期改成 Goodreads 的（Bear 同意历史日期也以 Goodreads 为准）；鳄鱼君补封面；Hit Refresh 补链接；两遍幂等
+  - Dune 与 9 本早年的书对不上，留着没动（见 book-note SKILL.md Pipeline F「已知的坑」）
+- Readwise 同步：上传 8 本；另 8 本老书 Readwise 里已有部分摘记（2021-2024 导入），Bear 没要求补，没强制补传
+- 删了两个误建条目（Everything Is Illuminated、The Designer of Books），是日记书架同步把读书笔记里提到的书名当成了在读的书
+
 ## 上次完成（2026-09-26）
 
 - 同步 8 篇新文章（2026-08-27 以来）
@@ -36,6 +45,9 @@
 
 ## 下次待办
 
+- [ ] 日记书架同步（voice-daily-note 的 bookshelf）会把读书笔记里**提到的**书名也建成「在读」条目，10-12 误建过两条，Bear 没定修不修
+- [ ] Goodreads 同步要不要并进定时任务（目前随 book-note 手动跑）
+
 - [ ] `add_book.py` 加 Open Library 按 ISBN 取封面的 fallback（比豆瓣同名匹配可靠），
       并在豆瓣命中时把书名/作者打印出来提示人工核对
 - [ ] **Phase 4b 每周阅读素材 summary**：接进周复盘，开工前先把 roadmap 里的待定项跟 Bear 过一遍
@@ -43,6 +55,9 @@
 - [ ] 定时自动同步（launchd plist）
 
 ## 遗留问题
+
+- `sync_goodreads.py` 只改 frontmatter、不搬文件：读完日期跨年改动后，条目所在年份文件夹可能和 `finished` 年份对不上（10-12 有 1 本）
+- Readwise 的老书（The Design of Everyday Things、月亮与六便士等 8 本）Readwise 里摘记比 Obsidian 少，要补可 `--book "书名"` 单本强制传
 
 - 豆瓣 suggest 只按书名模糊匹配，`--author` 不参与筛选，英文书容易命中同名的另一本书。
   豆瓣 fallback 拿回的封面每次都要人眼核一下
