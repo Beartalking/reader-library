@@ -6,6 +6,9 @@
   - 数据源：书架公开 RSS（`read` + `currently-reading`），书评页和书架网页要登录，抓不到「开始读」日期，改用放进 Currently Reading 的日期
   - 首跑：20 本分数、77 本历史读完日期改成 Goodreads 的（Bear 同意历史日期也以 Goodreads 为准）；鳄鱼君补封面；Hit Refresh 补链接；两遍幂等
   - Dune 与 9 本早年的书对不上，留着没动（见 book-note SKILL.md Pipeline F「已知的坑」）
+- **反向补进 Goodreads**：今年 14 本读完 + 3 本在读的生成导入表，Bear 上传加手动补（《峡谷食人事件》Goodreads 上没有，不管），读过的都在 Goodreads 打了分，再跑同步拉回 16 本（分数、链接、在读的 started）
+  - 书名中英不一致的 4 本（镖人、Clueless in Tokyo、Bullshit Jobs、Holly）预览时要被重复新建，先往原条目填 `goodreads:` 链接再同步；已写进 SKILL.md「已知的坑」
+  - 导入的在读书 started 会被记成导入日，改用日记最早提及日（Design of Books 9/21 · 千面英雄 10/1 · 秦二世 10/7）
 - Readwise 同步：上传 8 本；另 8 本老书 Readwise 里已有部分摘记（2021-2024 导入），Bear 没要求补，没强制补传
 - 删了两个误建条目（Everything Is Illuminated、The Designer of Books），是日记书架同步把读书笔记里提到的书名当成了在读的书
 
